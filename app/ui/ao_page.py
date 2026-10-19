@@ -1,4 +1,4 @@
-"""Page AO & Matching : import et analyse IA d'un appel d'offres, fiche AO et profil idéal."""
+"""Page AO & Matching : import et analyse IA d'un appel d'offres, fiche AO et classement des candidats."""
 
 from __future__ import annotations
 
@@ -9,7 +9,9 @@ import streamlit as st
 from app import db
 from app.appels_offres import import_ao_file, import_ao_text
 from app.config import ACCEPTED_AO_TYPES, is_groq_configured, is_supabase_configured
-from app.ui.fiche_ao import format_date, render_fiche_ao_by_id
+from app.matching import rank_candidats
+from app.ui.fiche_ao import format_date, render_fiche_ao
+from app.ui.matching_view import render_comparison, render_ranking
 
 _SOURCES = ("Fichier", "Texte collé")
 _SELECTION_KEY = "ao_selection"
@@ -105,4 +107,30 @@ def _render_appels_offres(appels_offres: list[dict[str, Any]]) -> None:
         format_func=lambda ao_id: f"{by_id[ao_id]['titre']} — {format_date(by_id[ao_id].get('created_at'))}",
         key=_SELECTION_KEY,
     )
-    render_fiche_ao_by_id(selected_id)
+    try:
+        ao = db.get_appel_offre(selected_id)
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"Lecture de l'appel d'offres impossible : {exc}")
+        return
+    if ao is None:
+        st.warning("Cet appel d'offres n'existe plus.")
+        return
+
+    fiche_tab, ranking_tab, comparison_tab = st.tabs(
+        ["Fiche de l'AO", "Classement des candidats", "Comparer deux candidats"]
+    )
+    with fiche_tab:
+        render_fiche_ao(ao)
+
+    try:
+        with st.spinner("Calcul des scores de compatibilité…"):
+            results = rank_candidats(ao, db.list_candidats_pour_matching(), db.get_appel_offre_embedding(ao["id"]))
+    except Exception as exc:  # noqa: BLE001
+        for tab in (ranking_tab, comparison_tab):
+            tab.error(f"Matching impossible : {exc}")
+        return
+
+    with ranking_tab:
+        render_ranking(ao, results)
+    with comparison_tab:
+        render_comparison(ao, results)
