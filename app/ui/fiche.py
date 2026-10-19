@@ -52,7 +52,7 @@ def format_experience(years: float | None) -> str:
     return "Non renseignée" if years is None else format_years(years)
 
 
-def render_fiche_by_id(candidat_id: str, *, show_texte: bool = True) -> None:
+def render_fiche_by_id(candidat_id: str, *, key: str = "fiche", show_texte: bool = True) -> None:
     """Charge le candidat depuis Supabase puis affiche sa fiche."""
     try:
         candidat = db.get_candidat(candidat_id)
@@ -62,11 +62,14 @@ def render_fiche_by_id(candidat_id: str, *, show_texte: bool = True) -> None:
     if candidat is None:
         st.warning("Ce candidat n'existe plus.")
         return
-    render_fiche(candidat, show_texte=show_texte)
+    render_fiche(candidat, key=key, show_texte=show_texte)
 
 
-def render_fiche(candidat: Mapping[str, Any], *, show_texte: bool = True) -> None:
-    """Affiche la fiche complète d'un candidat (ligne de la table `candidats`)."""
+def render_fiche(candidat: Mapping[str, Any], *, key: str = "fiche", show_texte: bool = True) -> None:
+    """Affiche la fiche complète d'un candidat (ligne de la table `candidats`).
+
+    `key` doit être unique par fiche affichée sur une même page.
+    """
     with st.container(border=True):
         _render_header(candidat)
         _render_identity(candidat)
@@ -83,7 +86,7 @@ def render_fiche(candidat: Mapping[str, Any], *, show_texte: bool = True) -> Non
 
         st.divider()
         _render_incertitudes(candidat)
-        _render_cv_link(candidat.get("chemin_fichier"))
+        _render_cv_link(candidat.get("chemin_fichier"), key=f"{key}_cv")
 
         if show_texte:
             with st.expander("Texte extrait du CV"):
@@ -154,7 +157,7 @@ def _render_incertitudes(candidat: Mapping[str, Any]) -> None:
     st.warning(f"**Incertitudes ({len(incertitudes)})**\n\n" + "\n".join(lines))
 
 
-def _render_cv_link(path: str | None) -> None:
+def _render_cv_link(path: str | None, *, key: str) -> None:
     if not path:
         return
     try:
@@ -163,5 +166,5 @@ def _render_cv_link(path: str | None) -> None:
         st.error(f"CV original introuvable dans le Storage ({escape_markdown(path)}).")
         st.caption(escape_markdown(str(exc)))
         return
-    st.link_button("Ouvrir le CV original", url, icon=":material/open_in_new:")
+    st.link_button("Ouvrir le CV original", url, icon=":material/open_in_new:", key=key)
     st.caption(f"{escape_markdown(path)} — lien temporaire valable {SIGNED_URL_EXPIRES_SECONDS // 60} min.")

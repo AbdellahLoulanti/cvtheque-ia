@@ -67,3 +67,37 @@ on conflict (id) do nothing;
 
 -- Politique : accès uniquement via service_role (pas de policy publique)
 -- Les uploads/lectures se font côté serveur Streamlit avec la clé service_role.
+
+-- 7. Recherche sémantique : candidats analysés classés par similarité cosinus
+create or replace function public.match_candidats(
+    query_embedding vector(384),
+    match_count int default 20,
+    experience_min numeric default null,
+    experience_max numeric default null,
+    include_unknown_experience boolean default false
+)
+returns table (id uuid, similarity double precision)
+language sql
+stable
+set search_path = public, extensions
+as $$
+    select c.id, 1 - (c.embedding <=> query_embedding) as similarity
+    from public.candidats c
+    where c.embedding is not null
+      and c.statut = 'analyse'
+      and (
+          (experience_min is null and experience_max is null)
+          or (c.experience_annees is null and include_unknown_experience)
+          or (
+              (experience_min is null or c.experience_annees >= experience_min)
+              and (experience_max is null or c.experience_annees <= experience_max)
+          )
+      )
+    order by c.embedding <=> query_embedding
+    limit match_count;
+$$;
+
+revoke execute on function public.match_candidats(vector, int, numeric, numeric, boolean)
+    from public, anon, authenticated;
+grant execute on function public.match_candidats(vector, int, numeric, numeric, boolean)
+    to service_role;

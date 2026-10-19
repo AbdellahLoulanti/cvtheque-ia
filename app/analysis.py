@@ -16,6 +16,7 @@ from app.config import (
     STATUT_ANALYSE,
     STATUT_ERREUR,
 )
+from app.embeddings import embed_profile
 from app.llm import LLMError, QuotaExhaustedError, WaitCallback, complete_json
 
 # Longueur maximale plausible de chaque champ texte
@@ -198,15 +199,23 @@ def analyse_candidats(
             results.append(AnalysisResult(candidat_id, filename, AnalysisStatus.ERROR, str(exc)))
             continue
 
+        fields: dict[str, Any] = {**profile, "statut": STATUT_ANALYSE}
+        message = ""
         try:
-            db.update_candidat(candidat_id, {**profile, "statut": STATUT_ANALYSE})
+            fields["embedding"] = embed_profile(profile)
+        except Exception as exc:  # noqa: BLE001 — la fiche reste exploitable, l'embedding sera rattrapé
+            fields["embedding"] = None
+            message = f"Embedding non calculé : {exc}"
+
+        try:
+            db.update_candidat(candidat_id, fields)
         except Exception as exc:  # noqa: BLE001
             results.append(
                 AnalysisResult(candidat_id, filename, AnalysisStatus.ERROR, f"Enregistrement impossible : {exc}")
             )
             continue
 
-        results.append(AnalysisResult(candidat_id, filename, AnalysisStatus.ANALYSED, profile=profile))
+        results.append(AnalysisResult(candidat_id, filename, AnalysisStatus.ANALYSED, message, profile))
 
     return results
 
