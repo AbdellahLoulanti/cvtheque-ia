@@ -19,7 +19,7 @@ from app.matching import (
     criterion_gaps,
     format_number,
 )
-from app.ui.fiche import display_name, escape_markdown, render_file_link
+from app.ui.fiche import display_name, escape_markdown, render_fiche_by_id, render_file_link
 
 _SHORT_LABELS = {
     Criterion.REQUIRED: "Obligatoires",
@@ -104,6 +104,9 @@ def render_match_detail(result: MatchResult, *, rank: int, key: str, compact: bo
             label="Ouvrir le CV original",
             key=f"{key}_cv",
         )
+        # Interrupteur plutôt qu'expander : la fiche contient déjà un expander (non imbricable)
+        if st.toggle("Afficher la fiche complète du candidat", key=f"{key}_fiche_visible"):
+            render_fiche_by_id(str(result.candidat["id"]), key=f"{key}_fiche")
 
 
 def render_comparison(ao: Mapping[str, Any], results: list[MatchResult]) -> None:
