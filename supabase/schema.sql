@@ -16,14 +16,19 @@ create table if not exists public.candidats (
     competences text[] default '{}',
     technologies text[] default '{}',
     formations text[] default '{}',
+    certifications text[],
     langues text[] default '{}',
     incertitudes text[] default '{}',
     texte_brut text,
     chemin_fichier text,
+    statut text not null default 'importe'
+        constraint candidats_statut_check check (statut in ('importe', 'analyse', 'erreur')),
     embedding vector(384),
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );
+
+create index if not exists candidats_statut_idx on public.candidats (statut);
 
 -- 3. Table appels d'offres
 create table if not exists public.appels_offres (
