@@ -5,11 +5,20 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from app.analysis import AnalysisResult, AnalysisStatus, analyse_candidats
 from app.config import ACCEPTED_CV_EXTENSIONS, is_groq_configured, is_supabase_configured
-from app.db import test_connection
+from app.db import list_candidats_a_analyser, test_connection
 from app.importer import ImportResult, ImportStatus, import_cvs
 
 PAGES = ("Import", "Candidats", "Recherche", "AO & Matching")
+
+LIST_LABELS = {
+    "competences": "Compétences",
+    "technologies": "Technologies",
+    "formations": "Formations",
+    "certifications": "Certifications",
+    "langues": "Langues",
+}
 
 
 def _sidebar_status() -> str:
@@ -60,6 +69,9 @@ def page_import() -> None:
     if results:
         _render_import_report(results)
 
+    st.divider()
+    _render_analysis_section()
+
 
 def _render_import_report(results: list[ImportResult]) -> None:
     st.subheader("Rapport d'import")
@@ -72,6 +84,73 @@ def _render_import_report(results: list[ImportResult]) -> None:
         [{"Fichier": r.filename, "Statut": r.status.value, "Détail": r.message} for r in results]
     )
     st.dataframe(report, hide_index=True)
+
+
+def _render_analysis_section() -> None:
+    st.subheader("Analyse IA")
+
+    if not is_groq_configured():
+        st.warning("Clé Groq manquante : renseignez GROQ_API_KEY dans .env pour lancer l'analyse.")
+        return
+
+    include_analysed = st.checkbox("Réanalyser aussi les CV déjà analysés")
+    try:
+        pending = list_candidats_a_analyser(include_analysed=include_analysed)
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"Lecture des candidats impossible : {exc}")
+        return
+
+    scope = "au total" if include_analysed else "en attente d'analyse (importés ou en erreur)"
+    st.caption(f"{len(pending)} CV {scope}.")
+
+    if st.button("Lancer l'analyse IA", type="primary", disabled=not pending):
+        progress = st.progress(0.0)
+        waiting = st.empty()
+
+        def on_progress(index: int, total: int, filename: str) -> None:
+            waiting.empty()
+            progress.progress((index - 1) / total, text=f"Analyse {index}/{total} — {filename}")
+
+        def on_wait(seconds: float, attempt: int, reason: str) -> None:
+            waiting.info(f"{reason} : nouvel essai dans {seconds:.0f} s (essai {attempt}).")
+
+        results = analyse_candidats(pending, on_progress=on_progress, on_wait=on_wait)
+        st.session_state["analysis_results"] = results
+        # Recharge la page pour mettre à jour le nombre de CV en attente
+        st.rerun()
+
+    results = st.session_state.get("analysis_results")
+    if results:
+        _render_analysis_report(results)
+
+
+def _render_analysis_report(results: list[AnalysisResult]) -> None:
+    counts = {status: sum(r.status is status for r in results) for status in AnalysisStatus}
+    for column, status in zip(st.columns(len(AnalysisStatus)), AnalysisStatus):
+        column.metric(status.value, counts[status])
+
+    def join(values: list[str] | None) -> str:
+        return ", ".join(values or [])
+
+    rows = []
+    for r in results:
+        p = r.profile
+        rows.append(
+            {
+                "Fichier": r.filename,
+                "Statut": r.status.value,
+                "Nom": p.get("nom"),
+                "Prénom": p.get("prenom"),
+                "Email": p.get("email"),
+                "Téléphone": p.get("telephone"),
+                "Poste": p.get("poste"),
+                "Expérience (ans)": p.get("experience_annees"),
+                **{label: join(p.get(name)) for name, label in LIST_LABELS.items()},
+                "Incertitudes": " · ".join(p.get("incertitudes", [])),
+                "Détail": r.message,
+            }
+        )
+    st.dataframe(pd.DataFrame(rows), hide_index=True)
 
 
 def page_candidats() -> None:

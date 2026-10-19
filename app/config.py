@@ -19,7 +19,19 @@ SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "").strip()  # service_role côté
 # --- Modèles ---
 EMBEDDING_MODEL: str = "paraphrase-multilingual-MiniLM-L12-v2"
 EMBEDDING_DIM: int = 384
-GROQ_MODEL: str = "llama-3.3-70b-versatile"
+GROQ_MODEL: str = "openai/gpt-oss-120b"
+GROQ_MAX_ATTEMPTS: int = 6
+# Au-delà, la limite est un quota journalier : inutile de bloquer l'interface
+GROQ_MAX_WAIT_SECONDS: float = 90.0
+
+# --- Analyse IA ---
+# Borne la taille d'une requête (quota gratuit Groq : 8 000 tokens / minute)
+MAX_CV_CHARS_FOR_LLM: int = 12_000
+MAX_EXPERIENCE_YEARS: int = 50
+
+STATUT_IMPORTE = "importe"
+STATUT_ANALYSE = "analyse"
+STATUT_ERREUR = "erreur"
 
 # --- Fichiers acceptés (extension -> type MIME pour le Storage) ---
 ACCEPTED_CV_TYPES: dict[str, str] = {

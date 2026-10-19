@@ -84,7 +84,9 @@ def _import_one(filename: str, data: bytes, seen_paths: set[str]) -> ImportResul
         return ImportResult(filename, ImportStatus.REJECTED, reason)
 
     try:
-        db.upload_cv(path, data, content_type)
+        # Aucun candidat ne référence ce chemin (vérifié plus haut) : un fichier déjà
+        # présent est orphelin, par exemple après suppression de la ligne dans Supabase
+        db.upload_cv(path, data, content_type, overwrite=True)
     except Exception as exc:  # noqa: BLE001
         return ImportResult(filename, ImportStatus.ERROR, f"Envoi vers le Storage impossible : {exc}")
 

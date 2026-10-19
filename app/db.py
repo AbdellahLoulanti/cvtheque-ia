@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 from supabase import Client, create_client
 
 from app.config import (
+    STATUT_ANALYSE,
+    STATUT_ERREUR,
+    STATUT_IMPORTE,
     STORAGE_BUCKET_CVS,
     SUPABASE_KEY,
     SUPABASE_URL,
@@ -64,12 +68,34 @@ def insert_candidat(row: dict[str, Any]) -> dict[str, Any]:
     return response.data[0]
 
 
+def list_candidats_a_analyser(include_analysed: bool = False) -> list[dict[str, Any]]:
+    """CV importés pas encore analysés ou en erreur ; tous les CV si include_analysed."""
+    statuts = [STATUT_IMPORTE, STATUT_ERREUR]
+    if include_analysed:
+        statuts.append(STATUT_ANALYSE)
+    response = (
+        get_supabase()
+        .table("candidats")
+        .select("id, chemin_fichier, texte_brut")
+        .in_("statut", statuts)
+        .order("created_at")
+        .execute()
+    )
+    return response.data
+
+
+def update_candidat(candidat_id: str, fields: dict[str, Any]) -> None:
+    payload = {**fields, "updated_at": datetime.now(timezone.utc).isoformat()}
+    get_supabase().table("candidats").update(payload).eq("id", candidat_id).execute()
+
+
 # --- Storage ---
 
-def upload_cv(path: str, data: bytes, content_type: str) -> None:
-    get_supabase().storage.from_(STORAGE_BUCKET_CVS).upload(
-        path, data, {"content-type": content_type}
-    )
+def upload_cv(path: str, data: bytes, content_type: str, overwrite: bool = False) -> None:
+    options = {"content-type": content_type}
+    if overwrite:
+        options["upsert"] = "true"
+    get_supabase().storage.from_(STORAGE_BUCKET_CVS).upload(path, data, options)
 
 
 def delete_cv(path: str) -> None:
