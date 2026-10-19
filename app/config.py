@@ -28,6 +28,7 @@ GROQ_MAX_WAIT_SECONDS: float = 90.0
 # --- Analyse IA ---
 # Borne la taille d'une requête (quota gratuit Groq : 8 000 tokens / minute)
 MAX_CV_CHARS_FOR_LLM: int = 12_000
+MAX_AO_CHARS_FOR_LLM: int = 12_000
 MAX_EXPERIENCE_YEARS: int = 50
 
 STATUT_IMPORTE = "importe"
@@ -41,6 +42,8 @@ ACCEPTED_CV_TYPES: dict[str, str] = {
     ".txt": "text/plain",
 }
 ACCEPTED_CV_EXTENSIONS: tuple[str, ...] = tuple(ACCEPTED_CV_TYPES)
+# Les appels d'offres acceptent les mêmes formats que les CV
+ACCEPTED_AO_TYPES: dict[str, str] = ACCEPTED_CV_TYPES
 
 # En dessous de ce nombre de lettres, un CV est considéré sans texte exploitable
 MIN_TEXT_LETTERS: int = 100
@@ -51,6 +54,7 @@ DATA_DIR = ROOT_DIR / "data"
 
 # --- Storage Supabase ---
 STORAGE_BUCKET_CVS = "cvs"
+STORAGE_BUCKET_AO = "appels-offres"
 SIGNED_URL_EXPIRES_SECONDS = 3600
 
 

@@ -1,10 +1,10 @@
-"""Fiche candidat réutilisable (pages Candidats, Recherche, AO & Matching)."""
+"""Fiche candidat réutilisable (pages Candidats, Recherche, AO & Matching) et éléments communs aux fiches."""
 
 from __future__ import annotations
 
 import re
 import string
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 import streamlit as st
@@ -77,16 +77,20 @@ def render_fiche(candidat: Mapping[str, Any], *, key: str = "fiche", show_texte:
         st.divider()
         left, right = st.columns(2, gap="large")
         with left:
-            _render_tags("competences", candidat.get("competences"), "blue")
-            _render_tags("technologies", candidat.get("technologies"), "violet")
+            render_tags(FIELD_LABELS["competences"], candidat.get("competences"), "blue")
+            render_tags(FIELD_LABELS["technologies"], candidat.get("technologies"), "violet")
         with right:
-            _render_list("formations", candidat.get("formations"))
-            _render_list("certifications", candidat.get("certifications"))
-            _render_list("langues", candidat.get("langues"))
+            for field in ("formations", "certifications", "langues"):
+                render_list(FIELD_LABELS[field], candidat.get(field))
 
         st.divider()
-        _render_incertitudes(candidat)
-        _render_cv_link(candidat.get("chemin_fichier"), key=f"{key}_cv")
+        if candidat.get("statut") == STATUT_ANALYSE:
+            render_incertitudes(candidat.get("incertitudes") or [], FIELD_LABELS)
+        else:
+            st.info("Ce CV n'a pas encore été analysé : lancez l'analyse IA depuis la page Import.")
+        render_file_link(
+            candidat.get("chemin_fichier"), db.create_cv_signed_url, label="Ouvrir le CV original", key=f"{key}_cv"
+        )
 
         if show_texte:
             with st.expander("Texte extrait du CV"):
@@ -120,28 +124,24 @@ def _render_identity(candidat: Mapping[str, Any]) -> None:
             column.caption("Non renseigné")
 
 
-def _render_tags(field: str, values: list[str] | None, color: str) -> None:
-    st.markdown(f"**{FIELD_LABELS[field]}**")
+def render_tags(label: str, values: list[str] | None, color: str) -> None:
+    st.markdown(f"**{label}**")
     if values:
         st.markdown(" ".join(f":{color}-badge[{escape_markdown(value)}]" for value in values))
     else:
         st.caption("Non renseigné")
 
 
-def _render_list(field: str, values: list[str] | None) -> None:
-    st.markdown(f"**{FIELD_LABELS[field]}**")
+def render_list(label: str, values: list[str] | None) -> None:
+    st.markdown(f"**{label}**")
     if values:
         st.markdown("\n".join(f"- {escape_markdown(value)}" for value in values))
     else:
         st.caption("Non renseigné")
 
 
-def _render_incertitudes(candidat: Mapping[str, Any]) -> None:
-    if candidat.get("statut") != STATUT_ANALYSE:
-        st.info("Ce CV n'a pas encore été analysé : lancez l'analyse IA depuis la page Import.")
-        return
-
-    incertitudes = candidat.get("incertitudes") or []
+def render_incertitudes(incertitudes: list[str], labels: Mapping[str, str]) -> None:
+    """Incertitudes « <champ> : <explication> », avec le libellé lisible du champ."""
     if not incertitudes:
         st.success("Aucune incertitude signalée par l'analyse.")
         return
@@ -149,7 +149,7 @@ def _render_incertitudes(candidat: Mapping[str, Any]) -> None:
     lines = []
     for entry in incertitudes:
         field, sep, explanation = entry.partition(":")
-        label = FIELD_LABELS.get(field.strip())
+        label = labels.get(field.strip())
         if sep and label:
             lines.append(f"- **{label}** : {escape_markdown(explanation.strip())}")
         else:
@@ -157,14 +157,17 @@ def _render_incertitudes(candidat: Mapping[str, Any]) -> None:
     st.warning(f"**Incertitudes ({len(incertitudes)})**\n\n" + "\n".join(lines))
 
 
-def _render_cv_link(path: str | None, *, key: str) -> None:
+def render_file_link(
+    path: str | None, create_signed_url: Callable[[str], str], *, label: str, key: str
+) -> None:
+    """Bouton vers le fichier original d'un bucket privé (lien temporaire)."""
     if not path:
         return
     try:
-        url = db.create_cv_signed_url(path)
+        url = create_signed_url(path)
     except Exception as exc:  # noqa: BLE001
-        st.error(f"CV original introuvable dans le Storage ({escape_markdown(path)}).")
+        st.error(f"Fichier original introuvable dans le Storage ({escape_markdown(path)}).")
         st.caption(escape_markdown(str(exc)))
         return
-    st.link_button("Ouvrir le CV original", url, icon=":material/open_in_new:", key=key)
+    st.link_button(label, url, icon=":material/open_in_new:", key=key)
     st.caption(f"{escape_markdown(path)} — lien temporaire valable {SIGNED_URL_EXPIRES_SECONDS // 60} min.")

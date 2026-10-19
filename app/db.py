@@ -1,4 +1,4 @@
-"""Client Supabase, test de connexion et accès aux candidats / Storage."""
+"""Client Supabase, test de connexion et accès aux candidats, appels d'offres et Storage."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from app.config import (
     STATUT_ANALYSE,
     STATUT_ERREUR,
     STATUT_IMPORTE,
+    STORAGE_BUCKET_AO,
     STORAGE_BUCKET_CVS,
     SUPABASE_KEY,
     SUPABASE_URL,
@@ -30,6 +31,18 @@ _DETAIL_COLUMNS = (
     "id, nom, prenom, email, telephone, poste, experience_annees, competences, technologies, "
     "formations, certifications, langues, incertitudes, texte_brut, chemin_fichier, statut, "
     "created_at, updated_at"
+)
+_AO_SUMMARY_COLUMNS = "id, titre, poste, experience_min_annees, competences_obligatoires, created_at"
+_AO_DETAIL_COLUMNS = (
+    "id, titre, poste, contexte, responsabilites, competences_obligatoires, competences_souhaitees, "
+    "experience_requise, experience_min_annees, technologies, contraintes, profil_ideal, incertitudes, "
+    "texte_brut, chemin_fichier, created_at, updated_at"
+)
+# Colonne absente (lecture) ou inconnue du cache PostgREST (écriture)
+_MISSING_COLUMN_CODES = {"42703", "PGRST204"}
+_AO_MIGRATION_MESSAGE = (
+    "La table appels_offres n'est pas à jour : exécutez "
+    "supabase/migrations/004_appels_offres.sql dans Supabase (SQL Editor)."
 )
 
 
@@ -174,13 +187,54 @@ def update_candidat(candidat_id: str, fields: dict[str, Any]) -> None:
     get_supabase().table("candidats").update(payload).eq("id", candidat_id).execute()
 
 
+# --- Appels d'offres ---
+
+def insert_appel_offre(row: dict[str, Any]) -> dict[str, Any]:
+    try:
+        response = get_supabase().table("appels_offres").insert(row).execute()
+    except APIError as exc:
+        _raise_if_ao_migration_missing(exc)
+        raise
+    return response.data[0]
+
+
+def list_appels_offres() -> list[dict[str, Any]]:
+    """Tous les appels d'offres, les plus récents d'abord."""
+    try:
+        response = (
+            get_supabase()
+            .table("appels_offres")
+            .select(_AO_SUMMARY_COLUMNS)
+            .order("created_at", desc=True)
+            .execute()
+        )
+    except APIError as exc:
+        _raise_if_ao_migration_missing(exc)
+        raise
+    return response.data
+
+
+def get_appel_offre(ao_id: str) -> dict[str, Any] | None:
+    response = (
+        get_supabase()
+        .table("appels_offres")
+        .select(_AO_DETAIL_COLUMNS)
+        .eq("id", ao_id)
+        .limit(1)
+        .execute()
+    )
+    return response.data[0] if response.data else None
+
+
+def _raise_if_ao_migration_missing(exc: APIError) -> None:
+    if exc.code in _MISSING_COLUMN_CODES:
+        raise RuntimeError(_AO_MIGRATION_MESSAGE) from exc
+
+
 # --- Storage ---
 
 def upload_cv(path: str, data: bytes, content_type: str, overwrite: bool = False) -> None:
-    options = {"content-type": content_type}
-    if overwrite:
-        options["upsert"] = "true"
-    get_supabase().storage.from_(STORAGE_BUCKET_CVS).upload(path, data, options)
+    _upload(STORAGE_BUCKET_CVS, path, data, content_type, overwrite)
 
 
 def delete_cv(path: str) -> None:
@@ -189,7 +243,36 @@ def delete_cv(path: str) -> None:
 
 def create_cv_signed_url(path: str, expires_in: int = SIGNED_URL_EXPIRES_SECONDS) -> str:
     """Lien temporaire vers un CV du bucket privé."""
-    response = get_supabase().storage.from_(STORAGE_BUCKET_CVS).create_signed_url(path, expires_in)
+    return _signed_url(STORAGE_BUCKET_CVS, path, expires_in)
+
+
+def upload_ao(path: str, data: bytes, content_type: str) -> None:
+    try:
+        _upload(STORAGE_BUCKET_AO, path, data, content_type, overwrite=False)
+    except Exception as exc:
+        if "bucket not found" in str(exc).casefold():
+            raise RuntimeError(_AO_MIGRATION_MESSAGE) from exc
+        raise
+
+
+def delete_ao(path: str) -> None:
+    get_supabase().storage.from_(STORAGE_BUCKET_AO).remove([path])
+
+
+def create_ao_signed_url(path: str, expires_in: int = SIGNED_URL_EXPIRES_SECONDS) -> str:
+    """Lien temporaire vers un fichier d'appel d'offres du bucket privé."""
+    return _signed_url(STORAGE_BUCKET_AO, path, expires_in)
+
+
+def _upload(bucket: str, path: str, data: bytes, content_type: str, overwrite: bool) -> None:
+    options = {"content-type": content_type}
+    if overwrite:
+        options["upsert"] = "true"
+    get_supabase().storage.from_(bucket).upload(path, data, options)
+
+
+def _signed_url(bucket: str, path: str, expires_in: int) -> str:
+    response = get_supabase().storage.from_(bucket).create_signed_url(path, expires_in)
     url = response.get("signedURL")
     if not url:
         raise RuntimeError(f"Fichier introuvable dans le Storage : {path}")

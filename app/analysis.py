@@ -10,14 +10,21 @@ from enum import Enum
 from typing import Any, Callable
 
 from app import db
-from app.config import (
-    MAX_CV_CHARS_FOR_LLM,
-    MAX_EXPERIENCE_YEARS,
-    STATUT_ANALYSE,
-    STATUT_ERREUR,
-)
+from app.config import MAX_CV_CHARS_FOR_LLM, STATUT_ANALYSE, STATUT_ERREUR
 from app.embeddings import embed_profile
 from app.llm import LLMError, QuotaExhaustedError, WaitCallback, complete_json
+from app.validation import (
+    NULLABLE_NUMBER,
+    NULLABLE_STRING,
+    NULLABLE_STRING_LIST,
+    STRING_LIST,
+    Flag,
+    as_string_list,
+    is_flagged,
+    validate_list,
+    validate_text,
+    validate_years,
+)
 
 # Longueur maximale plausible de chaque champ texte
 TEXT_FIELDS: dict[str, int] = {"nom": 80, "prenom": 80, "email": 254, "telephone": 30, "poste": 150}
@@ -29,24 +36,17 @@ NUMBER_FIELD = "experience_annees"
 LIST_FIELDS = ("competences", "technologies", "formations", "certifications", "langues")
 PROFILE_FIELDS = (*TEXT_FIELDS, NUMBER_FIELD, *LIST_FIELDS)
 
-MAX_LIST_ITEMS = 60
-MAX_LIST_ITEM_LENGTH = 200
-_EMPTY_VALUES = {"", "null", "none", "n/a", "na", "inconnu", "non renseigne", "non renseigné", "-"}
-
-_NULLABLE_STRING = {"type": ["string", "null"]}
-_NULLABLE_STRING_LIST = {"type": ["array", "null"], "items": {"type": "string"}}
-
 CV_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
-        "nom": _NULLABLE_STRING,
-        "prenom": _NULLABLE_STRING,
-        "email": _NULLABLE_STRING,
-        "telephone": _NULLABLE_STRING,
-        "poste": _NULLABLE_STRING,
-        "experience_annees": {"type": ["number", "null"]},
-        **{name: _NULLABLE_STRING_LIST for name in LIST_FIELDS},
-        "incertitudes": {"type": "array", "items": {"type": "string"}},
+        "nom": NULLABLE_STRING,
+        "prenom": NULLABLE_STRING,
+        "email": NULLABLE_STRING,
+        "telephone": NULLABLE_STRING,
+        "poste": NULLABLE_STRING,
+        "experience_annees": NULLABLE_NUMBER,
+        **{name: NULLABLE_STRING_LIST for name in LIST_FIELDS},
+        "incertitudes": STRING_LIST,
     },
     "required": [*PROFILE_FIELDS, "incertitudes"],
     "additionalProperties": False,
@@ -124,7 +124,7 @@ def validate_profile(data: Any, texte: str) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError("La réponse de l'IA n'est pas un objet JSON")
 
-    incertitudes = _as_string_list(data.get("incertitudes")) or []
+    incertitudes = as_string_list(data.get("incertitudes")) or []
     profile: dict[str, Any] = {}
 
     def flag(name: str, reason: str) -> None:
@@ -135,15 +135,7 @@ def validate_profile(data: Any, texte: str) -> dict[str, Any]:
             flag(name, "champ manquant dans la réponse de l'IA")
 
     for name, max_length in TEXT_FIELDS.items():
-        raw = data.get(name)
-        value = _as_string(raw)
-        if raw is not None and not isinstance(raw, str):
-            flag(name, f"type invalide ignoré ({type(raw).__name__})")
-            value = None
-        elif value and len(value) > max_length:
-            flag(name, f"valeur aberrante ignorée ({value[:40]}…)")
-            value = None
-        profile[name] = value
+        profile[name] = validate_text(data.get(name), name, max_length, flag)
 
     for name in NAME_FIELDS:
         value = profile[name]
@@ -153,17 +145,13 @@ def validate_profile(data: Any, texte: str) -> dict[str, Any]:
     profile["email"] = _validate_email(profile["email"], texte, flag)
     profile["telephone"] = _validate_phone(profile["telephone"], texte, flag)
 
-    profile[NUMBER_FIELD] = _validate_experience(data.get(NUMBER_FIELD), flag)
+    profile[NUMBER_FIELD] = validate_years(data.get(NUMBER_FIELD), NUMBER_FIELD, flag)
 
     for name in LIST_FIELDS:
-        raw = data.get(name)
-        if raw is not None and not isinstance(raw, (list, str)):
-            flag(name, f"type invalide ignoré ({type(raw).__name__})")
-            raw = None
-        profile[name] = _as_string_list(raw)
+        profile[name] = validate_list(data.get(name), name, flag)
 
     for name in PROFILE_FIELDS:
-        if profile[name] is None and not _is_flagged(name, incertitudes):
+        if profile[name] is None and not is_flagged(name, incertitudes):
             flag(name, "information absente du CV")
 
     profile["incertitudes"] = list(dict.fromkeys(incertitudes))
@@ -227,7 +215,7 @@ def _mark_error(candidat_id: str) -> None:
         pass
 
 
-def _validate_email(value: str | None, texte: str, flag: Callable[[str, str], None]) -> str | None:
+def _validate_email(value: str | None, texte: str, flag: Flag) -> str | None:
     if value is None:
         return None
     if not _EMAIL_PATTERN.fullmatch(value):
@@ -239,7 +227,7 @@ def _validate_email(value: str | None, texte: str, flag: Callable[[str, str], No
     return value.lower()
 
 
-def _validate_phone(value: str | None, texte: str, flag: Callable[[str, str], None]) -> str | None:
+def _validate_phone(value: str | None, texte: str, flag: Flag) -> str | None:
     if value is None:
         return None
     digits = re.sub(r"\D", "", value)
@@ -254,49 +242,6 @@ def _validate_phone(value: str | None, texte: str, flag: Callable[[str, str], No
     return value
 
 
-def _validate_experience(raw: Any, flag: Callable[[str, str], None]) -> float | None:
-    if raw is None:
-        return None
-    if isinstance(raw, bool):
-        flag(NUMBER_FIELD, "type invalide ignoré (bool)")
-        return None
-    if isinstance(raw, str):
-        match = re.search(r"\d+(?:[.,]\d+)?", raw)
-        if not match:
-            flag(NUMBER_FIELD, f"valeur non numérique ignorée ({raw[:40]})")
-            return None
-        raw = float(match.group().replace(",", "."))
-    if not isinstance(raw, (int, float)):
-        flag(NUMBER_FIELD, f"type invalide ignoré ({type(raw).__name__})")
-        return None
-    if not 0 <= raw <= MAX_EXPERIENCE_YEARS:
-        flag(NUMBER_FIELD, f"valeur aberrante ignorée ({raw})")
-        return None
-    return round(float(raw), 1)
-
-
-def _as_string(value: Any) -> str | None:
-    if not isinstance(value, str):
-        return None
-    value = " ".join(value.split())
-    return None if value.casefold() in _EMPTY_VALUES else value
-
-
-def _as_string_list(value: Any) -> list[str] | None:
-    if value is None:
-        return None
-    items = re.split(r"[,;\n]", value) if isinstance(value, str) else value
-    if not isinstance(items, list):
-        return None
-
-    unique: dict[str, str] = {}
-    for item in items:
-        text = _as_string(item)
-        if text and len(text) <= MAX_LIST_ITEM_LENGTH:
-            unique.setdefault(text.casefold(), text)
-    return list(unique.values())[:MAX_LIST_ITEMS] or None
-
-
 def _normalize(text: str) -> str:
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
     return " ".join(re.sub(r"[^a-z0-9]+", " ", text.lower()).split())
@@ -304,7 +249,3 @@ def _normalize(text: str) -> str:
 
 def _appears_in(value: str, texte: str) -> bool:
     return _normalize(value) in _normalize(texte)
-
-
-def _is_flagged(name: str, incertitudes: list[str]) -> bool:
-    return any(entry.split(":", 1)[0].strip().casefold() == name for entry in incertitudes)
