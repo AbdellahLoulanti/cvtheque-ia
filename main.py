@@ -5,20 +5,14 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from app.analysis import AnalysisResult, AnalysisStatus, analyse_candidats
+from app.analysis import LIST_FIELDS, AnalysisResult, AnalysisStatus, analyse_candidats
 from app.config import ACCEPTED_CV_EXTENSIONS, is_groq_configured, is_supabase_configured
 from app.db import list_candidats_a_analyser, test_connection
 from app.importer import ImportResult, ImportStatus, import_cvs
+from app.ui import candidats_page
+from app.ui.fiche import FIELD_LABELS
 
 PAGES = ("Import", "Candidats", "Recherche", "AO & Matching")
-
-LIST_LABELS = {
-    "competences": "Compétences",
-    "technologies": "Technologies",
-    "formations": "Formations",
-    "certifications": "Certifications",
-    "langues": "Langues",
-}
 
 
 def _sidebar_status() -> str:
@@ -145,17 +139,12 @@ def _render_analysis_report(results: list[AnalysisResult]) -> None:
                 "Téléphone": p.get("telephone"),
                 "Poste": p.get("poste"),
                 "Expérience (ans)": p.get("experience_annees"),
-                **{label: join(p.get(name)) for name, label in LIST_LABELS.items()},
+                **{FIELD_LABELS[name]: join(p.get(name)) for name in LIST_FIELDS},
                 "Incertitudes": " · ".join(p.get("incertitudes", [])),
                 "Détail": r.message,
             }
         )
     st.dataframe(pd.DataFrame(rows), hide_index=True)
-
-
-def page_candidats() -> None:
-    st.header("Candidats")
-    st.info("Liste et détail des candidats — à venir.")
 
 
 def page_recherche() -> None:
@@ -181,7 +170,7 @@ def main() -> None:
     if page == "Import":
         page_import()
     elif page == "Candidats":
-        page_candidats()
+        candidats_page.render()
     elif page == "Recherche":
         page_recherche()
     else:
