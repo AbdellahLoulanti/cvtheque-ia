@@ -1,0 +1,1 @@
+"""CVthèque IA — package applicatif."""
