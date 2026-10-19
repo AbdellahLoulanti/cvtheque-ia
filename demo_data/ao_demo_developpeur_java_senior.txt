@@ -1,0 +1,51 @@
+APPEL D'OFFRES N° AO-2026-047
+Prestation de développement backend - Plateforme de paiements instantanés
+
+Émetteur : Banque Régionale Rhône-Alpes (BRRA), Direction des Systèmes d'Information
+Date limite de réponse : 13 novembre 2026
+
+1. CONTEXTE
+La BRRA modernise son système de paiements. L'application monolithique actuelle, développée en Java EE, est progressivement remplacée par une architecture de microservices afin de prendre en charge les virements instantanés SEPA (SCT Inst) avec une disponibilité 24 h/24.
+Le projet est mené par une équipe agile de 9 personnes (Product Owner, Scrum Master, 5 développeurs, 2 testeurs) en sprints de deux semaines.
+
+2. OBJET DE LA MISSION
+Le prestataire renforcera l'équipe de développement pour concevoir, développer et maintenir les microservices de la nouvelle plateforme.
+
+3. RESPONSABILITÉS
+- Concevoir et développer des microservices et des API REST sécurisées.
+- Participer aux choix d'architecture et à la revue de code.
+- Mettre en place la communication asynchrone entre services.
+- Écrire les tests unitaires et d'intégration et garantir la qualité du code.
+- Participer aux cérémonies agiles et au chiffrage des user stories.
+- Assurer le support de niveau 3 lors des mises en production.
+
+4. PROFIL RECHERCHÉ : Développeur Java senior
+Expérience : 5 ans minimum en développement Java, dont au moins 2 ans sur des architectures microservices.
+
+Compétences obligatoires :
+- Maîtrise de Java (version 17 ou supérieure) et de Spring Boot
+- Conception d'API REST
+- Persistance avec JPA / Hibernate et bases PostgreSQL
+- Tests automatisés (JUnit, Mockito)
+- Pratique des méthodes agiles (Scrum)
+
+Compétences appréciées :
+- Apache Kafka
+- Docker et Kubernetes
+- Connaissance du domaine bancaire ou des paiements
+- Anglais professionnel (documentation technique)
+
+Qualités attendues : rigueur, autonomie, esprit d'équipe et capacité à vulgariser.
+
+5. ENVIRONNEMENT TECHNIQUE
+Java 17, Spring Boot 3, Spring Security, Hibernate, PostgreSQL, Kafka, Docker, Kubernetes, GitLab CI, SonarQube, Jira.
+
+6. CONDITIONS D'EXÉCUTION
+- Lieu : Lyon Part-Dieu, 2 jours de télétravail par semaine
+- Démarrage : 4 janvier 2027
+- Durée : 12 mois renouvelables
+- Prestation au forfait jour, budget maximal de 650 € HT par jour
+- Astreintes ponctuelles lors des mises en production
+
+7. MODALITÉS DE RÉPONSE
+Les candidatures (CV et proposition financière) sont à adresser avant la date limite à achats-dsi@brra.example.fr.

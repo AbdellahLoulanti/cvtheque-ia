@@ -1,0 +1,25 @@
+Sophie MARTIN
+Développeuse backend PHP
+sophie.martin@example.com | 06 23 45 67 89 | Nantes
+
+PROFIL
+Développeuse backend avec 5 ans d'expérience sur des sites e-commerce à fort trafic.
+
+EXPÉRIENCES PROFESSIONNELLES
+2021 - aujourd'hui : Développeuse backend - ShopOuest, Nantes
+- Développement d'API avec Symfony 6 et API Platform.
+- Modélisation de bases MySQL et optimisation des performances avec Redis.
+- Intégration de solutions de paiement (Stripe, PayPal).
+
+2019 - 2021 : Développeuse web - Agence Atlantique Digital, Nantes
+- Développement de sites sous Laravel et WordPress.
+- Maintenance d'applications PHP legacy.
+
+FORMATION
+2019 : Master Informatique - Université de Nantes
+
+COMPÉTENCES
+PHP, Symfony, Laravel, API Platform, MySQL, Redis, Docker, Git, PHPUnit, API REST
+
+LANGUES
+Français (langue maternelle), Anglais (intermédiaire)

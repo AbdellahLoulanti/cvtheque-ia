@@ -1,0 +1,28 @@
+Claire MOREAU
+Ingénieure DevOps
+claire.moreau@example.com | 06 67 89 01 23 | Lille
+
+PROFIL
+Ingénieure DevOps avec 6 ans d'expérience dans l'automatisation des infrastructures cloud.
+
+EXPÉRIENCES PROFESSIONNELLES
+2021 - aujourd'hui : Ingénieure DevOps - NordCloud, Lille
+- Infrastructure as code avec Terraform et Ansible sur AWS.
+- Administration de clusters Kubernetes, supervision Prometheus et Grafana.
+- Pipelines CI/CD avec GitLab CI.
+
+2019 - 2021 : Administratrice systèmes - HébergeNord, Lille
+- Administration de serveurs Linux, scripts Bash et Python.
+- Mise en place de sauvegardes et de la haute disponibilité.
+
+FORMATION
+2019 : Diplôme d'ingénieur réseaux et systèmes - IMT Nord Europe
+
+COMPÉTENCES
+Linux, Bash, Python, Terraform, Ansible, AWS, Kubernetes, Docker, GitLab CI, Prometheus, Grafana
+
+CERTIFICATIONS
+AWS Certified Solutions Architect - Associate, Certified Kubernetes Administrator (CKA)
+
+LANGUES
+Français (langue maternelle), Anglais (courant)

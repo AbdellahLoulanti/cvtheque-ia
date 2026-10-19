@@ -1,5 +1,7 @@
 -- Schéma CVthèque IA
 -- À exécuter dans Supabase → SQL Editor
+-- Installation neuve : ce fichier suffit et peut être relancé sans risque.
+-- Les fichiers de migrations/ ne servent qu'à mettre à jour une base créée avec une version antérieure.
 
 -- 1. Extension pgvector
 create extension if not exists vector;

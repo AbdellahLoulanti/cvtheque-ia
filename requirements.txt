@@ -1,8 +1,8 @@
-streamlit
-pymupdf
-python-docx
-sentence-transformers
-pandas
-groq
-supabase
-python-dotenv
+streamlit>=1.65,<2
+pymupdf>=1.28,<2
+python-docx>=1.2,<2
+sentence-transformers>=6.1,<7
+pandas>=2.3,<3
+groq>=1.7,<2
+supabase>=2.33,<3
+python-dotenv>=1.2,<2

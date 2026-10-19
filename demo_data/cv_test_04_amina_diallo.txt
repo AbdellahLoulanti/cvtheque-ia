@@ -1,0 +1,25 @@
+Amina DIALLO
+Data scientist
+amina.diallo@example.com | 06 45 67 89 01 | Paris
+
+PROFIL
+Data scientist avec 3 ans d'expérience en apprentissage automatique appliqué à la prévision de la demande.
+
+EXPÉRIENCES PROFESSIONNELLES
+2023 - aujourd'hui : Data scientist - RetailData, Paris
+- Modèles de prévision des ventes avec scikit-learn et XGBoost.
+- Traitement de données volumineuses avec Pandas et PySpark.
+- Mise en production des modèles avec MLflow et FastAPI.
+
+2022 - 2023 : Data analyst - ConseilChiffres, Paris
+- Tableaux de bord Power BI et requêtes SQL.
+- Analyses statistiques pour les équipes marketing.
+
+FORMATION
+2022 : Master Data Science - Université Paris-Saclay
+
+COMPÉTENCES
+Python, Pandas, NumPy, scikit-learn, XGBoost, PySpark, SQL, MLflow, FastAPI, Power BI, statistiques, machine learning
+
+LANGUES
+Français (courant), Anglais (courant), Wolof (langue maternelle)
