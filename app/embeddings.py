@@ -1,4 +1,4 @@
-"""Embeddings des profils (Sentence Transformers multilingue, exécuté en local) et recherche sémantique."""
+"""Embeddings des profils et des AO (Sentence Transformers multilingue, exécuté en local) et recherche sémantique."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from app import db
 from app.config import EMBEDDING_DIM, EMBEDDING_MODEL, SEMANTIC_MATCH_COUNT
-from app.search import experience_years, format_years
+from app.search import dedupe_terms, experience_years, find_term, format_years
 
 if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
@@ -48,6 +48,30 @@ def profile_text(candidat: Mapping[str, Any]) -> str:
     return ". ".join(parts)
 
 
+def appel_offre_text(ao: Mapping[str, Any]) -> str:
+    """Profil recherché par l'AO, au format des profils candidats pour que leurs embeddings soient comparables."""
+    required = ao.get("competences_obligatoires") or []
+    # Les technologies exigées d'abord (« Java 17 » pour « Java ») : le modèle tronque au-delà de 128 tokens
+    technologies = sorted(
+        ao.get("technologies") or [],
+        key=lambda technology: not any(find_term(skill, [technology]) for skill in required),
+    )
+    # Une compétence déjà citée parmi les technologies ne consomme pas de tokens une seconde fois
+    competences = [
+        skill
+        for skill in dedupe_terms([*required, *(ao.get("competences_souhaitees") or [])])
+        if find_term(skill, technologies) is None
+    ]
+    return profile_text(
+        {
+            "poste": ao.get("poste") or ao.get("titre"),
+            "experience_annees": ao.get("experience_min_annees"),
+            "technologies": technologies,
+            "competences": competences,
+        }
+    )
+
+
 def embed_texts(texts: list[str]) -> list[list[float]]:
     # Vecteurs normalisés : la distance cosinus de pgvector suffit au classement
     vectors = get_model().encode(texts, normalize_embeddings=True, convert_to_numpy=True)
@@ -57,6 +81,12 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 def embed_profile(candidat: Mapping[str, Any]) -> list[float] | None:
     """Embedding du profil, ou None si le profil est vide."""
     text = profile_text(candidat)
+    return embed_texts([text])[0] if text else None
+
+
+def embed_appel_offre(ao: Mapping[str, Any]) -> list[float] | None:
+    """Embedding du profil recherché par l'AO, ou None si l'AO est vide."""
+    text = appel_offre_text(ao)
     return embed_texts([text])[0] if text else None
 
 
