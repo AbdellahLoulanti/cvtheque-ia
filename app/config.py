@@ -50,6 +50,7 @@ DATA_DIR = ROOT_DIR / "data"
 
 # --- Storage Supabase ---
 STORAGE_BUCKET_CVS = "cvs"
+SIGNED_URL_EXPIRES_SECONDS = 3600
 
 
 def is_groq_configured() -> bool:

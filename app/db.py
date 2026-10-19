@@ -8,6 +8,7 @@ from typing import Any
 from supabase import Client, create_client
 
 from app.config import (
+    SIGNED_URL_EXPIRES_SECONDS,
     STATUT_ANALYSE,
     STATUT_ERREUR,
     STATUT_IMPORTE,
@@ -18,6 +19,17 @@ from app.config import (
 )
 
 _client: Client | None = None
+
+# Colonnes du tableau récapitulatif (sans le texte brut ni l'embedding, volumineux)
+_SUMMARY_COLUMNS = (
+    "id, nom, prenom, poste, experience_annees, technologies, langues, "
+    "incertitudes, chemin_fichier, statut, created_at"
+)
+_DETAIL_COLUMNS = (
+    "id, nom, prenom, email, telephone, poste, experience_annees, competences, technologies, "
+    "formations, certifications, langues, incertitudes, texte_brut, chemin_fichier, statut, "
+    "created_at, updated_at"
+)
 
 
 def get_supabase() -> Client:
@@ -68,6 +80,30 @@ def insert_candidat(row: dict[str, Any]) -> dict[str, Any]:
     return response.data[0]
 
 
+def list_candidats() -> list[dict[str, Any]]:
+    """Tous les candidats, les plus récents d'abord."""
+    response = (
+        get_supabase()
+        .table("candidats")
+        .select(_SUMMARY_COLUMNS)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return response.data
+
+
+def get_candidat(candidat_id: str) -> dict[str, Any] | None:
+    response = (
+        get_supabase()
+        .table("candidats")
+        .select(_DETAIL_COLUMNS)
+        .eq("id", candidat_id)
+        .limit(1)
+        .execute()
+    )
+    return response.data[0] if response.data else None
+
+
 def list_candidats_a_analyser(include_analysed: bool = False) -> list[dict[str, Any]]:
     """CV importés pas encore analysés ou en erreur ; tous les CV si include_analysed."""
     statuts = [STATUT_IMPORTE, STATUT_ERREUR]
@@ -100,3 +136,12 @@ def upload_cv(path: str, data: bytes, content_type: str, overwrite: bool = False
 
 def delete_cv(path: str) -> None:
     get_supabase().storage.from_(STORAGE_BUCKET_CVS).remove([path])
+
+
+def create_cv_signed_url(path: str, expires_in: int = SIGNED_URL_EXPIRES_SECONDS) -> str:
+    """Lien temporaire vers un CV du bucket privé."""
+    response = get_supabase().storage.from_(STORAGE_BUCKET_CVS).create_signed_url(path, expires_in)
+    url = response.get("signedURL")
+    if not url:
+        raise RuntimeError(f"Fichier introuvable dans le Storage : {path}")
+    return url
