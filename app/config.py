@@ -21,14 +21,16 @@ EMBEDDING_MODEL: str = "paraphrase-multilingual-MiniLM-L12-v2"
 EMBEDDING_DIM: int = 384
 GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
-# --- Fichiers acceptés ---
-ACCEPTED_CV_EXTENSIONS: tuple[str, ...] = (".pdf", ".docx", ".doc", ".txt")
-ACCEPTED_CV_MIME_TYPES: tuple[str, ...] = (
-    "application/pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/msword",
-    "text/plain",
-)
+# --- Fichiers acceptés (extension -> type MIME pour le Storage) ---
+ACCEPTED_CV_TYPES: dict[str, str] = {
+    ".pdf": "application/pdf",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".txt": "text/plain",
+}
+ACCEPTED_CV_EXTENSIONS: tuple[str, ...] = tuple(ACCEPTED_CV_TYPES)
+
+# En dessous de ce nombre de lettres, un CV est considéré sans texte exploitable
+MIN_TEXT_LETTERS: int = 100
 
 # --- Chemins locaux ---
 DEMO_DATA_DIR = ROOT_DIR / "demo_data"
