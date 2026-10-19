@@ -17,8 +17,9 @@ SUPABASE_URL: str = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "").strip()  # service_role côté serveur
 
 # --- Modèles ---
-EMBEDDING_MODEL: str = "paraphrase-multilingual-MiniLM-L12-v2"
+EMBEDDING_MODEL: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 EMBEDDING_DIM: int = 384
+SEMANTIC_MATCH_COUNT: int = 20
 GROQ_MODEL: str = "openai/gpt-oss-120b"
 GROQ_MAX_ATTEMPTS: int = 6
 # Au-delà, la limite est un quota journalier : inutile de bloquer l'interface

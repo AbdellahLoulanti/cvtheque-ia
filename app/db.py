@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from postgrest.exceptions import APIError
 from supabase import Client, create_client
 
 from app.config import (
@@ -117,6 +118,54 @@ def list_candidats_a_analyser(include_analysed: bool = False) -> list[dict[str, 
         .order("created_at")
         .execute()
     )
+    return response.data
+
+
+def list_candidats_sans_embedding() -> list[dict[str, Any]]:
+    """CV analysés dont l'embedding n'a pas encore été calculé."""
+    response = (
+        get_supabase()
+        .table("candidats")
+        .select("id, chemin_fichier, poste, experience_annees, technologies, competences")
+        .eq("statut", STATUT_ANALYSE)
+        .is_("embedding", "null")
+        .order("created_at")
+        .execute()
+    )
+    return response.data
+
+
+def match_candidats(
+    query_embedding: list[float],
+    *,
+    limit: int,
+    experience_min: float | None,
+    experience_max: float | None,
+    include_unknown_experience: bool,
+) -> list[dict[str, Any]]:
+    """Appelle la fonction SQL match_candidats (similarité cosinus pgvector)."""
+    try:
+        response = (
+            get_supabase()
+            .rpc(
+                "match_candidats",
+                {
+                    "query_embedding": query_embedding,
+                    "match_count": limit,
+                    "experience_min": experience_min,
+                    "experience_max": experience_max,
+                    "include_unknown_experience": include_unknown_experience,
+                },
+            )
+            .execute()
+        )
+    except APIError as exc:
+        if exc.code == "PGRST202":
+            raise RuntimeError(
+                "La fonction SQL match_candidats est absente : exécutez "
+                "supabase/migrations/003_recherche_semantique.sql dans Supabase (SQL Editor)."
+            ) from exc
+        raise
     return response.data
 
 
