@@ -38,19 +38,6 @@ def format_date(value: str | None) -> str:
     return pd.to_datetime(value, utc=True).tz_convert(local_tz).strftime("%d/%m/%Y %H:%M")
 
 
-def render_fiche_ao_by_id(ao_id: str, *, key: str = "fiche_ao") -> None:
-    """Charge l'appel d'offres depuis Supabase puis affiche sa fiche."""
-    try:
-        ao = db.get_appel_offre(ao_id)
-    except Exception as exc:  # noqa: BLE001
-        st.error(f"Lecture de l'appel d'offres impossible : {exc}")
-        return
-    if ao is None:
-        st.warning("Cet appel d'offres n'existe plus.")
-        return
-    render_fiche_ao(ao, key=key)
-
-
 def render_fiche_ao(ao: Mapping[str, Any], *, key: str = "fiche_ao") -> None:
     """Affiche la synthèse et le profil idéal d'un AO (ligne de la table `appels_offres`).
 

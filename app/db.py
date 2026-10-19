@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from typing import Any
 
@@ -31,6 +32,10 @@ _DETAIL_COLUMNS = (
     "id, nom, prenom, email, telephone, poste, experience_annees, competences, technologies, "
     "formations, certifications, langues, incertitudes, texte_brut, chemin_fichier, statut, "
     "created_at, updated_at"
+)
+_MATCHING_COLUMNS = (
+    "id, nom, prenom, poste, experience_annees, competences, technologies, certifications, langues, "
+    "texte_brut, chemin_fichier, embedding"
 )
 _AO_SUMMARY_COLUMNS = "id, titre, poste, experience_min_annees, competences_obligatoires, created_at"
 _AO_DETAIL_COLUMNS = (
@@ -148,6 +153,18 @@ def list_candidats_sans_embedding() -> list[dict[str, Any]]:
     return response.data
 
 
+def list_candidats_pour_matching() -> list[dict[str, Any]]:
+    """CV analysés avec ce qu'il faut pour les comparer à un AO (fiche, texte brut, embedding)."""
+    response = (
+        get_supabase()
+        .table("candidats")
+        .select(_MATCHING_COLUMNS)
+        .eq("statut", STATUT_ANALYSE)
+        .execute()
+    )
+    return [{**row, "embedding": parse_vector(row.get("embedding"))} for row in response.data]
+
+
 def match_candidats(
     query_embedding: list[float],
     *,
@@ -224,6 +241,25 @@ def get_appel_offre(ao_id: str) -> dict[str, Any] | None:
         .execute()
     )
     return response.data[0] if response.data else None
+
+
+def get_appel_offre_embedding(ao_id: str) -> list[float] | None:
+    response = (
+        get_supabase()
+        .table("appels_offres")
+        .select("embedding")
+        .eq("id", ao_id)
+        .limit(1)
+        .execute()
+    )
+    return parse_vector(response.data[0].get("embedding")) if response.data else None
+
+
+def parse_vector(value: Any) -> list[float] | None:
+    """PostgREST renvoie les colonnes vector sous forme de texte « [0.1,0.2,…] »."""
+    if value is None:
+        return None
+    return json.loads(value) if isinstance(value, str) else list(value)
 
 
 def _raise_if_ao_migration_missing(exc: APIError) -> None:
