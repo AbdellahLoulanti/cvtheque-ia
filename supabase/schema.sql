@@ -50,7 +50,12 @@ create index if not exists appels_offres_embedding_idx
     on public.appels_offres
     using hnsw (embedding vector_cosine_ops);
 
--- 5. Bucket Storage privé "cvs"
+-- 5. Row Level Security : aucune policy => accès refusé aux clés anon/authenticated.
+--    L'app utilise la clé service_role, qui contourne la RLS.
+alter table public.candidats enable row level security;
+alter table public.appels_offres enable row level security;
+
+-- 6. Bucket Storage privé "cvs"
 insert into storage.buckets (id, name, public)
 values ('cvs', 'cvs', false)
 on conflict (id) do nothing;

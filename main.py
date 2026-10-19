@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
-from app.config import is_groq_configured
+from app.config import ACCEPTED_CV_EXTENSIONS, is_groq_configured, is_supabase_configured
 from app.db import test_connection
+from app.importer import ImportResult, ImportStatus, import_cvs
 
 PAGES = ("Import", "Candidats", "Recherche", "AO & Matching")
 
@@ -32,7 +34,44 @@ def _sidebar_status() -> str:
 
 def page_import() -> None:
     st.header("Import")
-    st.info("Import de CV (PDF / DOCX) — à venir.")
+    st.caption("Formats acceptés : PDF, DOCX, TXT. Vous pouvez sélectionner plusieurs fichiers.")
+
+    if not is_supabase_configured():
+        st.error("Supabase n'est pas configuré : renseignez SUPABASE_URL et SUPABASE_KEY dans .env.")
+        return
+
+    files = st.file_uploader(
+        "CV à importer",
+        type=[ext.lstrip(".") for ext in ACCEPTED_CV_EXTENSIONS],
+        accept_multiple_files=True,
+    )
+
+    if st.button("Importer", type="primary", disabled=not files):
+        progress = st.progress(0.0)
+
+        def on_progress(index: int, total: int, filename: str) -> None:
+            progress.progress((index - 1) / total, text=f"{index}/{total} — {filename}")
+
+        results = import_cvs(((f.name, f.getvalue()) for f in files), on_progress=on_progress)
+        progress.empty()
+        st.session_state["import_results"] = results
+
+    results = st.session_state.get("import_results")
+    if results:
+        _render_import_report(results)
+
+
+def _render_import_report(results: list[ImportResult]) -> None:
+    st.subheader("Rapport d'import")
+
+    counts = {status: sum(r.status is status for r in results) for status in ImportStatus}
+    for column, status in zip(st.columns(len(ImportStatus)), ImportStatus):
+        column.metric(status.value, counts[status])
+
+    report = pd.DataFrame(
+        [{"Fichier": r.filename, "Statut": r.status.value, "Détail": r.message} for r in results]
+    )
+    st.dataframe(report, hide_index=True)
 
 
 def page_candidats() -> None:
