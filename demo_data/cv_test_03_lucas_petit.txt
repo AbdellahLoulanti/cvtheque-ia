@@ -1,0 +1,25 @@
+Lucas PETIT
+Développeur frontend React
+lucas.petit@example.com | 07 34 56 78 90 | Bordeaux
+
+PROFIL
+Développeur frontend passionné par les interfaces soignées et accessibles, 4 ans d'expérience.
+
+EXPÉRIENCES PROFESSIONNELLES
+2022 - aujourd'hui : Développeur frontend - MediaSud, Bordeaux
+- Développement d'applications web en React 18 et TypeScript.
+- Gestion d'état avec Redux Toolkit, tests avec Jest et Testing Library.
+- Création d'un design system avec Storybook et Tailwind CSS.
+
+2020 - 2022 : Intégrateur web - Studio Garonne, Bordeaux
+- Intégration HTML, CSS et JavaScript de maquettes Figma.
+- Amélioration de l'accessibilité (normes RGAA).
+
+FORMATION
+2020 : Licence professionnelle Développement web - IUT de Bordeaux
+
+COMPÉTENCES
+JavaScript, TypeScript, React, Redux, Next.js, HTML, CSS, Tailwind CSS, Jest, Storybook, Figma, accessibilité web
+
+LANGUES
+Français (langue maternelle), Anglais (courant)

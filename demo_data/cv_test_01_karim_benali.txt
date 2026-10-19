@@ -1,0 +1,30 @@
+Karim BENALI
+Ingénieur logiciel
+karim.benali@example.com | +33 6 12 34 56 78 | Lyon
+
+PROFIL
+Ingénieur logiciel avec 8 ans d'expérience dans la conception d'API REST et de microservices pour le secteur bancaire.
+
+EXPÉRIENCES PROFESSIONNELLES
+2020 - aujourd'hui : Ingénieur logiciel senior - Banque Rhône Finance, Lyon
+- Conception et développement de microservices Spring Boot (Java 17) pour la gestion des paiements.
+- Mise en place de la messagerie asynchrone avec Apache Kafka.
+- Persistance avec Hibernate / JPA sur PostgreSQL.
+- Déploiement sur Kubernetes, conteneurisation Docker, pipelines Jenkins.
+
+2016 - 2020 : Ingénieur développement - SoftServices, Lyon
+- Développement d'applications Java EE et migration vers Spring Boot.
+- Écriture de tests unitaires JUnit et Mockito.
+- Optimisation des requêtes SQL sur Oracle.
+
+FORMATION
+2016 : Diplôme d'ingénieur en informatique - INSA Lyon
+
+COMPÉTENCES
+Java, Spring Boot, Spring Security, Hibernate, JPA, Maven, Kafka, PostgreSQL, Oracle, Docker, Kubernetes, Jenkins, Git, JUnit, architecture microservices, API REST
+
+CERTIFICATIONS
+Oracle Certified Professional Java SE 11 Developer
+
+LANGUES
+Français (langue maternelle), Anglais (courant)

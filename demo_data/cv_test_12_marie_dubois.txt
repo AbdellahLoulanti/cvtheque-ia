@@ -1,0 +1,24 @@
+Marie DUBOIS
+Développeuse Python backend
+marie.dubois@example.com | 06 11 22 33 44 | Strasbourg
+
+PROFIL
+Développeuse backend passionnée par les API performantes et la qualité du code.
+
+EXPÉRIENCES
+Développeuse backend - Alsace Data Services, Strasbourg
+- Conception d'API avec Django REST Framework et FastAPI.
+- Tâches asynchrones avec Celery et RabbitMQ.
+- Bases PostgreSQL, conteneurisation Docker.
+
+Développeuse web - Agence Rhin Digital, Strasbourg
+- Sites et back-offices en Django, intégration de paiements Stripe.
+
+FORMATION
+Diplôme d'ingénieur informatique - Télécom Physique Strasbourg
+
+COMPÉTENCES
+Python, Django, Django REST Framework, FastAPI, Celery, RabbitMQ, PostgreSQL, Docker, Git, pytest, API REST
+
+LANGUES
+Français (langue maternelle), Allemand (courant), Anglais (B2)

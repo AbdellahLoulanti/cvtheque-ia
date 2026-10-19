@@ -1,0 +1,24 @@
+Thomas ROUX
+Développeur Node.js junior
+thomas.roux@example.com | 07 56 78 90 12 | Toulouse
+
+PROFIL
+Jeune développeur backend, 1 an d'expérience après une alternance, motivé par les architectures serverless.
+
+EXPÉRIENCES PROFESSIONNELLES
+2025 - aujourd'hui : Développeur backend - StartUp Occitanie, Toulouse
+- Développement d'API REST avec Node.js, Express et TypeScript.
+- Base de données MongoDB, authentification JWT.
+- Déploiement de fonctions AWS Lambda.
+
+2023 - 2025 : Alternant développeur - WebPlus, Toulouse
+- Maintenance d'une application Express et écriture de tests Mocha.
+
+FORMATION
+2025 : Bachelor Développeur web - Ynov Toulouse
+
+COMPÉTENCES
+JavaScript, TypeScript, Node.js, Express, MongoDB, AWS Lambda, JWT, Git, Mocha, API REST
+
+LANGUES
+Français (langue maternelle), Anglais (intermédiaire)

@@ -1,0 +1,25 @@
+Emma WILSON
+Senior Backend Engineer
+emma.wilson@example.com | +44 7700 900123 | Paris (open to relocation)
+
+SUMMARY
+Backend engineer with 6 years of experience building high-volume payment and e-commerce platforms.
+
+EXPERIENCE
+2022 - present: Senior Backend Engineer - PayFlow Europe, Paris
+- Designed Java 17 / Spring Boot microservices processing 2 million transactions per day.
+- Event-driven architecture with Apache Kafka, PostgreSQL and Redis.
+- Unit and integration testing with JUnit and Mockito, code quality with SonarQube.
+- Deployment on Kubernetes (AWS EKS) with Docker and GitHub Actions.
+
+2020 - 2022: Software Engineer - ShopLine Ltd, London
+- REST APIs with Spring Boot and Hibernate, Agile / Scrum team of 8 developers.
+
+EDUCATION
+2020: MSc Computer Science - University of Manchester
+
+SKILLS
+Java, Spring Boot, Hibernate, Kafka, PostgreSQL, Redis, Docker, Kubernetes, AWS, JUnit, Mockito, REST APIs, microservices, Agile
+
+LANGUAGES
+English (native), French (professional working proficiency)
