@@ -11,6 +11,7 @@ import streamlit as st
 
 from app import db
 from app.config import SIGNED_URL_EXPIRES_SECONDS, STATUT_ANALYSE, STATUT_ERREUR, STATUT_IMPORTE
+from app.search import experience_years, format_years
 
 FIELD_LABELS: dict[str, str] = {
     "nom": "Nom",
@@ -47,19 +48,21 @@ def display_name(candidat: Mapping[str, Any]) -> str:
     return name or candidat.get("chemin_fichier") or "Candidat sans nom"
 
 
-def experience_years(candidat: Mapping[str, Any]) -> float | None:
-    value = candidat.get("experience_annees")
-    try:
-        return None if value is None else float(value)
-    except (TypeError, ValueError):
-        return None
-
-
 def format_experience(years: float | None) -> str:
-    if years is None:
-        return "Non renseignée"
-    unit = "ans" if years >= 2 else "an"
-    return f"{years:g} {unit}".replace(".", ",")
+    return "Non renseignée" if years is None else format_years(years)
+
+
+def render_fiche_by_id(candidat_id: str, *, show_texte: bool = True) -> None:
+    """Charge le candidat depuis Supabase puis affiche sa fiche."""
+    try:
+        candidat = db.get_candidat(candidat_id)
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"Lecture de la fiche impossible : {exc}")
+        return
+    if candidat is None:
+        st.warning("Ce candidat n'existe plus.")
+        return
+    render_fiche(candidat, show_texte=show_texte)
 
 
 def render_fiche(candidat: Mapping[str, Any], *, show_texte: bool = True) -> None:

@@ -10,7 +10,8 @@ import streamlit as st
 
 from app import db
 from app.config import STATUT_ANALYSE, STATUT_ERREUR, STATUT_IMPORTE, is_supabase_configured
-from app.ui.fiche import STATUT_LABELS, display_name, experience_years, render_fiche
+from app.search import experience_years
+from app.ui.fiche import STATUT_LABELS, display_name, render_fiche_by_id
 
 _COLUMNS = ("Candidat", "Poste", "Expérience (ans)", "Technologies", "Langues", "Incertitudes", "Statut", "Importé le")
 
@@ -38,17 +39,7 @@ def render() -> None:
     if selected_id is None:
         st.caption("Sélectionnez une ligne du tableau pour afficher la fiche du candidat.")
         return
-
-    try:
-        candidat = db.get_candidat(selected_id)
-    except Exception as exc:  # noqa: BLE001
-        st.error(f"Lecture de la fiche impossible : {exc}")
-        return
-
-    if candidat is None:
-        st.warning("Ce candidat n'existe plus.")
-        return
-    render_fiche(candidat)
+    render_fiche_by_id(selected_id)
 
 
 def _render_counts(candidats: list[dict[str, Any]]) -> None:

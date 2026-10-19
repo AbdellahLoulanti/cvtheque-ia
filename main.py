@@ -9,7 +9,7 @@ from app.analysis import LIST_FIELDS, AnalysisResult, AnalysisStatus, analyse_ca
 from app.config import ACCEPTED_CV_EXTENSIONS, is_groq_configured, is_supabase_configured
 from app.db import list_candidats_a_analyser, test_connection
 from app.importer import ImportResult, ImportStatus, import_cvs
-from app.ui import candidats_page
+from app.ui import candidats_page, recherche_page
 from app.ui.fiche import FIELD_LABELS
 
 PAGES = ("Import", "Candidats", "Recherche", "AO & Matching")
@@ -147,11 +147,6 @@ def _render_analysis_report(results: list[AnalysisResult]) -> None:
     st.dataframe(pd.DataFrame(rows), hide_index=True)
 
 
-def page_recherche() -> None:
-    st.header("Recherche")
-    st.info("Recherche sémantique dans la CVthèque — à venir.")
-
-
 def page_ao_matching() -> None:
     st.header("AO & Matching")
     st.info("Appels d'offres et matching candidats — à venir.")
@@ -172,7 +167,7 @@ def main() -> None:
     elif page == "Candidats":
         candidats_page.render()
     elif page == "Recherche":
-        page_recherche()
+        recherche_page.render()
     else:
         page_ao_matching()
 
