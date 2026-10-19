@@ -20,9 +20,9 @@ from app.config import (
 
 _client: Client | None = None
 
-# Colonnes du tableau récapitulatif (sans le texte brut ni l'embedding, volumineux)
+# Colonnes des listes et de la recherche (sans le texte brut ni l'embedding, volumineux)
 _SUMMARY_COLUMNS = (
-    "id, nom, prenom, poste, experience_annees, technologies, langues, "
+    "id, nom, prenom, poste, experience_annees, competences, technologies, langues, "
     "incertitudes, chemin_fichier, statut, created_at"
 )
 _DETAIL_COLUMNS = (
