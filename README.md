@@ -9,6 +9,8 @@ Application de gestion de CV assistée par l'IA, pour recruteurs et ESN :
 
 Stack : Python, [Streamlit](https://streamlit.io) (interface), [Groq](https://groq.com) (LLM), [Sentence Transformers](https://www.sbert.net) (embeddings en local), [Supabase](https://supabase.com) (PostgreSQL + pgvector + Storage).
 
+Aperçu de l'application : voir les [captures d'écran](#captures-décran).
+
 Le [dossier technique](docs/dossier-technique.md) détaille l'architecture, les choix techniques, les coûts, le traitement des données personnelles, le calcul du score de matching, les limites et la roadmap.
 
 ---
@@ -151,6 +153,70 @@ Le dossier [`demo_data/`](demo_data/) contient 12 CV fictifs aux formats variés
 
 ---
 
+## Captures d'écran
+
+### Import et analyse IA
+
+La barre latérale confirme que la clé Groq est chargée et que Supabase est connecté. On importe les CV, puis on lance l'analyse IA.
+
+![Page Import](docs/screenshots/01-import.png)
+
+### Candidats
+
+Le tableau de tous les candidats, avec des compteurs par statut :
+
+![Liste des candidats](docs/screenshots/02-candidats-liste.png)
+
+Un clic sur une ligne ouvre la fiche structurée produite par l'IA :
+
+![Fiche d'un candidat](docs/screenshots/03-candidat-fiche.png)
+
+Les incertitudes signalent ce que l'IA n'a pas pu établir. Ici, il n'y a aucune date d'emploi, donc l'expérience n'est pas calculable. Un lien temporaire ouvre le CV original :
+
+![Incertitudes et lien vers le CV original](docs/screenshots/04-candidat-incertitudes.png)
+
+Le texte extrait du CV reste consultable :
+
+![Texte extrait du CV](docs/screenshots/05-candidat-texte-extrait.png)
+
+### Recherche
+
+**Critères** : les candidats doivent avoir toutes les compétences demandées (ET)…
+
+![Recherche par critères, mode ET](docs/screenshots/06-recherche-criteres-et.png)
+
+… ou au moins l'une d'entre elles (OU). Les critères trouvés et les critères manquants sont indiqués pour chaque candidat :
+
+![Recherche par critères, mode OU](docs/screenshots/07-recherche-criteres-ou.png)
+
+**Sémantique** : on décrit le profil avec ses propres mots, et les candidats sont classés par proximité de sens :
+
+![Recherche sémantique](docs/screenshots/08-recherche-semantique.png)
+
+### Appels d'offres et matching
+
+La synthèse d'un appel d'offres produite par l'IA :
+
+![Fiche d'un appel d'offres](docs/screenshots/09-ao-fiche.png)
+
+Les compétences obligatoires et souhaitées, les contraintes et le profil idéal :
+
+![Compétences, contraintes et profil idéal de l'AO](docs/screenshots/10-ao-profil-ideal.png)
+
+Le classement des candidats, avec les points de chaque critère et les compétences obligatoires manquantes :
+
+![Classement des candidats](docs/screenshots/11-matching-classement.png)
+
+La comparaison de deux candidats montre les points forts, les écarts et le statut de chaque compétence (acquise, non démontrée, manquante)…
+
+![Comparaison de deux candidats](docs/screenshots/12-matching-comparaison.png)
+
+… puis le détail des écarts, critère par critère, avec une explication en une phrase :
+
+![Écarts entre deux candidats](docs/screenshots/13-matching-comparaison-ecarts.png)
+
+---
+
 ## Mettre à jour une base existante
 
 `schema.sql` suffit pour une installation neuve. Si votre base a été créée avec une version antérieure du projet, exécutez dans **SQL Editor** les migrations manquantes de [`supabase/migrations/`](supabase/migrations/), dans l'ordre :
@@ -203,7 +269,8 @@ cvtheque-ia/
 │   └── migrations/          Mises à jour des bases existantes
 ├── demo_data/               CV et appel d'offres fictifs pour tester
 ├── docs/
-│   └── dossier-technique.md Architecture, choix, coûts, données personnelles, score, limites, roadmap
+│   ├── dossier-technique.md Architecture, choix, coûts, données personnelles, score, limites, roadmap
+│   └── screenshots/         Captures d'écran du README
 ├── requirements.txt
 └── .env.example             Modèle du fichier .env
 ```
